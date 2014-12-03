@@ -38,18 +38,13 @@ class Node {
 
 class Edge {
     int weight;
-    Node dest;
+    Node a;
+    Node b;
     
-    Edge(int weight, Node dest) {
+    Edge(Node a, Node b, int weight) {
         this.weight = weight;
-        this.dest = dest;
-    }
-}
-
-class NullEdge extends Edge {
-    
-    NullEdge(Node dest) {
-        super(-1, dest);
+        this.a = a;
+        this.b = b;
     }
 }
 
@@ -61,8 +56,14 @@ class MazeGame {
     
     ArrayList<ArrayList<Node>> map;
     
-    void initMap() {
+    MazeGame() {
+        
+    }
+    
+    void initMaze() {
         ArrayList<ArrayList<Node>> tempMatrix = this.buildMatrix();
+        tempMatrix = this.massageMatrix(tempMatrix);
+        ArrayList<Edge> edges = this.extractEdges(tempMatrix);
     }
     
     ArrayList<ArrayList<Node>> buildMatrix() {
@@ -83,6 +84,7 @@ class MazeGame {
         return result;
     }
     
+    // To link together all the Nodes in the given matrix of Nodes with their neighbors.
     ArrayList<ArrayList<Node>> massageMatrix(ArrayList<ArrayList<Node>>
         matrix) {
         
@@ -121,14 +123,26 @@ class MazeGame {
         return matrix;
     }
     
+    // Returns a list of the Edges as implied by the connections in the given matrix of Nodes.
     ArrayList<Edge> extractEdges(ArrayList<ArrayList<Node>>
         matrix) {
         
+        ArrayList<Edge> result = new ArrayList<Edge>();
+        
         for (ArrayList<Node> arr : matrix) {
             for (Node n : arr) {
-                
+                if(n.x != BOARD_WIDTH) {
+                    // Right
+                    result.add(new Edge(n, n.right, n.halfWeight + n.right.halfWeight));
+                }
+                if(n.y != BOARD_HEIGHT) {
+                    // Bottom
+                    result.add(new Edge(n, n.bottom, n.halfWeight + n.bottom.halfWeight));
+                }
             }
         }
+        
+        return result;
     }
     
 }
