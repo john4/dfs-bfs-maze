@@ -28,6 +28,8 @@ class Node {
     Node top;
     Node right;
     Node bottom;
+    // State determines color
+    String state;
     
     Node(int x, int y) {
         this.x = x;
@@ -36,6 +38,7 @@ class Node {
         this.right = this;
         this.top = this;
         this.bottom = this;
+        this.state = "unvisited";
     }
     
     public String toString() {
@@ -103,6 +106,9 @@ class MazeGame extends World {
             
             result.add(tempX);
         }
+        
+        result.get(0).get(0).state = "start";
+        result.get(BOARD_HEIGHT - 1).get(BOARD_WIDTH - 1).state = "end";
         
         return result;
     }
@@ -199,46 +205,34 @@ class MazeGame extends World {
                 (HALF_BOARD_WIDTH * NODE_SIZE),
                 (HALF_BOARD_HEIGHT * NODE_SIZE)), (BOARD_WIDTH * NODE_SIZE),
                 (BOARD_HEIGHT * NODE_SIZE), new Black());
-
-//        System.out.println(this.map.get(0).get(0).top.toString());
-//        System.out.println(this.map.get(0).get(0).bottom.toString());
-//        System.out.println(this.map.get(0).get(0).left.toString());
-//        System.out.println(this.map.get(0).get(0).right.toString());
         
-        // Draw the Cells onto the background.
+        // Draw the Nodes onto the background.
         for (ArrayList<Node> arr : this.map) {
             
             for(Node n : arr) {
-//                this.background = new OverlayImages(this.background,
-//                        new RectangleImage(new Posn(n.x * NODE_SIZE + HALF_NODE_SIZE, n.y * NODE_SIZE + HALF_NODE_SIZE), NODE_SIZE, NODE_SIZE, new Blue()));
-//                
-//                // Top edge case
-//                if(n.y == 0) {
-//                    this.background = new OverlayImages(this.background,
-//                            new RectangleImage(new Posn((n.x * NODE_SIZE) + HALF_NODE_SIZE, n.y * NODE_SIZE),
-//                                    NODE_SIZE, 2, new Black()));
-//                }
-//                
-//                // Left edge case
-//                if(n.x == 0) {
-//                    this.background = new OverlayImages(this.background,
-//                            new RectangleImage(new Posn(n.x * NODE_SIZE, (n.y * NODE_SIZE) + HALF_NODE_SIZE),
-//                                    2, NODE_SIZE, new Black()));
-//                }
-//                
-//                if(n.bottom.toString().equals(n.toString())) {
-//                    this.background = new OverlayImages(this.background,
-//                            new RectangleImage(new Posn((n.x * NODE_SIZE) + HALF_NODE_SIZE, (n.y * NODE_SIZE) + NODE_SIZE),
-//                                    NODE_SIZE, 2, new Black()));
-//                }
-//                
-//                if(n.right.toString().equals(n.toString())) {
-//                    this.background = new OverlayImages(this.background,
-//                            new RectangleImage(new Posn(n.x * NODE_SIZE + NODE_SIZE, (n.y * NODE_SIZE) + HALF_NODE_SIZE),
-//                                    2, NODE_SIZE, new Black()));
-//                }
-//                
+                // Determine color.
+                Color c;
                 
+                if(n.state.equals("visited")) {
+                    c = new Color(255, 278, 201);
+                }
+                else if(n.state.equals("seeker")) {
+                    c = new Color(153, 76, 0);
+                }
+                else if(n.state.equals("highlight")) {
+                    c = new Color(255, 128, 0);
+                }
+                else if(n.state.equals("start")) {
+                    c = new Color(0, 204, 0);
+                }
+                else if(n.state.equals("end")) {
+                    c = new Color(200, 0, 0);
+                }
+                else {
+                    c = new Color(255, 255, 255);
+                }
+                
+                // Determine size and position.
                 int top = 0;
                 int bottom = 0;
                 int left = 0;
@@ -257,10 +251,10 @@ class MazeGame extends World {
                     right = 2;
                 }
                 
-                
+                // Overlay.
                 this.background = new OverlayImages(this.background,
-                        new RectangleImage(new Posn((n.x * NODE_SIZE) + right / 2 - left / 2, (n.y * NODE_SIZE) + bottom / 2 - top / 2),
-                                NODE_SIZE - 4 + left + right, NODE_SIZE - 4 + top + bottom, new White()));
+                        new RectangleImage(new Posn((n.x * NODE_SIZE) + right / 2 - left / 2 + HALF_NODE_SIZE, (n.y * NODE_SIZE) + bottom / 2 - top / 2 + HALF_NODE_SIZE),
+                                NODE_SIZE - 4 + left + right, NODE_SIZE - 4 + top + bottom, c));
                 
             }
         }
