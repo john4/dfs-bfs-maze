@@ -84,11 +84,11 @@ class Edge {
 
 class MazeGame extends World {
     // Constants
-    static final int BOARD_WIDTH = 30; // in Nodes
-    static final int BOARD_HEIGHT = 30; // in Nodes
+    static final int BOARD_WIDTH = 100; // in Nodes
+    static final int BOARD_HEIGHT = 60; // in Nodes
     static final int HALF_BOARD_WIDTH = BOARD_WIDTH / 2; // in Nodes
     static final int HALF_BOARD_HEIGHT = BOARD_HEIGHT / 2; // in Nodes
-    static final int NODE_SIZE = 15; // in px
+    static final int NODE_SIZE = 10; // in px
     static final int HALF_NODE_SIZE = NODE_SIZE / 2; // in px  
     
     ArrayList<ArrayList<Node>> map;
@@ -100,12 +100,16 @@ class MazeGame extends World {
     //  - human
     String gameMode;
     
+    // The Node of the maze that represents the end.
+    Node end;
+    
     // The Node that is being controlled by the human.
     Node seeker;
-    // The Node(s) that are actively searching in an automated search.
-    ArrayList<Node> seekers;
-    // The worklist Stack for the depth first search. 
+    // The worklist Stack in a depth first search,
+    // and the worklist Queue in a breadth first search. 
     ArrayDeque<Node> worklist;
+    // The Node that is actively searching in a depth first search.
+    Node seekerDFS;
     
     MazeGame(String mode) {
         if(mode.equals("DFS") || mode.equals("BFS") || mode.equals("human")) {
@@ -124,14 +128,16 @@ class MazeGame extends World {
             
             // Initialize game play necessities.
             Node start = this.map.get(0).get(0);
+            this.end = this.map.get(BOARD_HEIGHT - 1).get(BOARD_WIDTH - 1);
             this.seeker = start;
-            this.seekers = new ArrayList<Node>();
             this.worklist = new ArrayDeque<Node>();
             
             // Set initial states based on selected game mode
             if(mode.equals("DFS")) {
-                System.out.println("YUP");
                 this.InitDFS(start);
+            }
+            else if(mode.equals("BFS")) {
+                this.InitBFS(start);
             }
         }
         else {
@@ -269,7 +275,7 @@ class MazeGame extends World {
         }
         
         this.worklist = worklist;
-        this.seekers.add(start);
+        this.seekerDFS = start;
     }
     
     // Steps the automated depth first search of this maze, to be
@@ -277,23 +283,36 @@ class MazeGame extends World {
     // SIDEEFFECT: Updates this worklist, this seekers, and the
     // states of seeking nodes. 
     void StepDFS() {
-        // NOTE: in DFS, we only have a single seeker in our seekers list.
-        Node seeker = this.seekers.get(0);
-        
         // Pop the next node to become the seeker.
         Node nextSeeker = this.worklist.pop();
         
         // Update states.
-        seeker.state = "visited";
+        seekerDFS.state = "visited";
         nextSeeker.state = "seeker";
         
-        this.seekers.remove(0);
-        this.seekers.add(nextSeeker);
+        this.seekerDFS = nextSeeker;
         
-        // Add to the worklist all, if any, of the adjacent nodes of the new seeker.
+        // Push to the worklist all, if any, of the adjacent nodes of the new seeker.
         for(Node n : nextSeeker.getLinkedNodes()) {
             if(n.state != "visited") {
                 worklist.push(n);
+            }
+        }
+    }
+    
+    void InitBFS(Node start) {
+        this.worklist.addFirst(start);
+    }
+    
+    void StepBFS() {
+        Node seeker = this.worklist.pop();
+        
+        seeker.state = "visited";
+        
+        for(Node n : seeker.getLinkedNodes()) {
+            if(n.state != "visited") {
+                n.state = "seeker";
+                worklist.addLast(n);
             }
         }
     }
@@ -304,7 +323,7 @@ class MazeGame extends World {
             this.StepDFS();
         }
         else if(this.gameMode.equals("BFS")) {
-            
+            this.StepBFS();
         }
         else {
             
@@ -378,6 +397,37 @@ class MazeGame extends World {
         }
         
         return background;
+    }
+    
+    // Check if any of the seeker Nodes have the "end" state.
+    public WorldEnd worldEnds() {
+        WorldEnd state = new WorldEnd(false, this.background);
+        
+        if(this.gameMode.equals("human")) {
+            if(this.seeker == this.end) {
+                state = new WorldEnd(true, new OverlayImages(this.background,
+                        new TextImage(new Posn(BOARD_WIDTH / 2, BOARD_HEIGHT / 2),
+                                "GAME OVER", Color.red)));
+            }
+        }
+        else if(this.gameMode.equals("BFS")) {
+            for(Node n : this.worklist) {
+                if(n == this.end) {
+                    state = new WorldEnd(true, new OverlayImages(this.background,
+                            new TextImage(new Posn(BOARD_WIDTH / 2, BOARD_HEIGHT / 2),
+                                    "GAME OVER", Color.red)));
+                }
+            }
+        }
+        else if(this.gameMode.equals("DFS")) {
+            if(this.seekerDFS == this.end) {
+                state = new WorldEnd(true, new OverlayImages(this.background,
+                        new TextImage(new Posn(BOARD_WIDTH / 2, BOARD_HEIGHT / 2),
+                                "GAME OVER", Color.red)));
+            }
+        }
+        
+        return state;
     }
 }
 
@@ -467,8 +517,8 @@ class ExamplesMaze {
     
     
     // RUN THE GAME
-    MazeGame w = new MazeGame("DFS");
-    boolean runAnimated = this.w.bigBang(1000, 600, 0.01);
+    MazeGame w = new MazeGame("BFS");
+    boolean runAnimated = this.w.bigBang(1000, 600, 0.0001);
     
     
 }
