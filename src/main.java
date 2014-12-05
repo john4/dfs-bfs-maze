@@ -5,6 +5,7 @@
 // nampb
 
 import java.awt.Color;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +45,29 @@ class Node {
     public String toString() {
         return "(" + Integer.toString(this.x) + ", " + Integer.toString(this.y) + ")";
     }
+    
+    // Returns a list of Nodes adjacent to this Node that are not itself.
+    ArrayList<Node> getLinkedNodes() {
+        ArrayList<Node> result = new ArrayList<Node>();
+        
+        if(this.left != this) {
+            result.add(this.left);
+        }
+
+        if(this.top != this) {
+            result.add(this.top);
+        }
+
+        if(this.right != this) {
+            result.add(this.right);
+        }
+
+        if(this.bottom != this) {
+            result.add(this.bottom);
+        }
+        
+        return result;
+    }
 }
 
 class Edge {
@@ -70,16 +94,54 @@ class MazeGame extends World {
     ArrayList<ArrayList<Node>> map;
     ArrayList<Edge> edges;
     
-    MazeGame() {
-        this.initMaze();
-        this.linkNodes(this.kruskal(this.edges, this.map));
-        
-        for(ArrayList<Node> arr : this.map) {
-            for(Node n : arr) {
-                System.out.println("THIS: " + n.toString() + "    Top: " + n.top.toString() + " bottom: " + n.bottom.toString()
-                        + " left: " + n.left.toString() + " right: " + n.right.toString());
+    // Determines the mode of the game:
+    //  - DFS
+    //  - BFS
+    //  - human
+    String gameMode;
+    
+    // The Node that is being controlled by the human.
+    Node seeker;
+    // The Node(s) that are actively searching in an automated search.
+    ArrayList<Node> seekers;
+    // The worklist Stack for the depth first search. 
+    ArrayDeque<Node> worklist;
+    
+    MazeGame(String mode) {
+        if(mode.equals("DFS") || mode.equals("BFS") || mode.equals("human")) {
+            this.gameMode = mode;
+            
+            // Create a new maze
+            this.initMaze();
+            this.linkNodes(this.kruskal(this.edges, this.map));
+            
+            for(ArrayList<Node> arr : this.map) {
+                for(Node n : arr) {
+                    System.out.println("THIS: " + n.toString() + "    Top: " + n.top.toString() + " bottom: " + n.bottom.toString()
+                            + " left: " + n.left.toString() + " right: " + n.right.toString());
+                }
+            }
+            
+            // Initialize game play necessities.
+            Node start = this.map.get(0).get(0);
+            this.seeker = start;
+            this.seekers = new ArrayList<Node>();
+            this.worklist = new ArrayDeque<Node>();
+            
+            // Set initial states based on selected game mode
+            if(mode.equals("DFS")) {
+                System.out.println("YUP");
+                this.InitDFS(start);
             }
         }
+        else {
+            throw new RuntimeException("Constructed MazeGame with an invalid mode setting.");
+        }
+    }
+    
+    // Convenience constructor for a human-controlled game.
+    MazeGame() {
+        this("human");
     }
     
     void initMaze() {
@@ -157,8 +219,6 @@ class MazeGame extends World {
             }
         }
         
-        System.out.println("LENGTHMOFO " + reps.size());
-        
         for (int index = 1 ; index < edges.size(); index = index + 1) { 
             if(!utils.find(reps, edges.get(index).a.toString()).equals(utils.find(reps, (edges.get(index).b.toString())))) {
                 edgesInTree.add(edges.get(index));
@@ -195,6 +255,64 @@ class MazeGame extends World {
         }
     }
     
+    /////////////////////////////////////////////////////////////////////////
+    
+    // Initiates an automated depth first search of this maze, starting
+    // at the given Node.
+    // SIDEEFFECT: Sets this worklist and this seekers.
+    void InitDFS(Node start) {
+        ArrayDeque<Node> worklist = new ArrayDeque<Node>();
+        
+        // Initialize worklist to the nodes adjacent to the start.
+        for(Node n : start.getLinkedNodes()) {
+            worklist.push(n);
+        }
+        
+        this.worklist = worklist;
+        this.seekers.add(start);
+    }
+    
+    // Steps the automated depth first search of this maze, to be
+    // called by this onTick().
+    // SIDEEFFECT: Updates this worklist, this seekers, and the
+    // states of seeking nodes. 
+    void StepDFS() {
+        // NOTE: in DFS, we only have a single seeker in our seekers list.
+        Node seeker = this.seekers.get(0);
+        
+        // Pop the next node to become the seeker.
+        Node nextSeeker = this.worklist.pop();
+        
+        // Update states.
+        seeker.state = "visited";
+        nextSeeker.state = "seeker";
+        
+        this.seekers.remove(0);
+        this.seekers.add(nextSeeker);
+        
+        // Add to the worklist all, if any, of the adjacent nodes of the new seeker.
+        for(Node n : nextSeeker.getLinkedNodes()) {
+            if(n.state != "visited") {
+                worklist.push(n);
+            }
+        }
+    }
+
+    // Operates the world on each tick.
+    public World onTick() {
+        if(this.gameMode.equals("DFS")) {
+            this.StepDFS();
+        }
+        else if(this.gameMode.equals("BFS")) {
+            
+        }
+        else {
+            
+        }
+        
+        return this;
+    }
+    
     // The background for the world.
     WorldImage background;
     
@@ -214,7 +332,7 @@ class MazeGame extends World {
                 Color c;
                 
                 if(n.state.equals("visited")) {
-                    c = new Color(255, 278, 201);
+                    c = new Color(255, 178, 201);
                 }
                 else if(n.state.equals("seeker")) {
                     c = new Color(153, 76, 0);
@@ -349,8 +467,8 @@ class ExamplesMaze {
     
     
     // RUN THE GAME
-    MazeGame w = new MazeGame();
-    boolean runAnimated = this.w.bigBang(1000, 600, 0.2);
+    MazeGame w = new MazeGame("DFS");
+    boolean runAnimated = this.w.bigBang(1000, 600, 0.01);
     
     
 }
