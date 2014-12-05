@@ -32,6 +32,10 @@ class Node {
     Node(int x, int y) {
         this.x = x;
         this.y = y;
+        this.left = this;
+        this.right = this;
+        this.top = this;
+        this.bottom = this;
     }
     
     public String toString() {
@@ -51,24 +55,34 @@ class Edge {
     }
 }
 
-class MazeGame {
+class MazeGame extends World {
     // Constants
-    static final int BOARD_WIDTH = 100; // in Nodes
-    static final int BOARD_HEIGHT = 60; // in Nodes
-    static final int NODE_SIZE = 20; // in px
+    static final int BOARD_WIDTH = 30; // in Nodes
+    static final int BOARD_HEIGHT = 30; // in Nodes
+    static final int HALF_BOARD_WIDTH = BOARD_WIDTH / 2; // in Nodes
+    static final int HALF_BOARD_HEIGHT = BOARD_HEIGHT / 2; // in Nodes
+    static final int NODE_SIZE = 15; // in px
+    static final int HALF_NODE_SIZE = NODE_SIZE / 2; // in px  
     
     ArrayList<ArrayList<Node>> map;
     ArrayList<Edge> edges;
     
     MazeGame() {
         this.initMaze();
+        this.linkNodes(this.kruskal(this.edges, this.map));
+        
+        for(ArrayList<Node> arr : this.map) {
+            for(Node n : arr) {
+                System.out.println("THIS: " + n.toString() + "    Top: " + n.top.toString() + " bottom: " + n.bottom.toString()
+                        + " left: " + n.left.toString() + " right: " + n.right.toString());
+            }
+        }
     }
     
     void initMaze() {
         Utils utils = new Utils();
         
         ArrayList<ArrayList<Node>> tempMatrix = this.buildMatrix();
-        tempMatrix = this.massageMatrix(tempMatrix);
         ArrayList<Edge> edges = this.extractEdges(tempMatrix);
         utils.sort(edges);
         
@@ -93,49 +107,9 @@ class MazeGame {
         return result;
     }
     
-    // To link together all the Nodes in the given matrix of Nodes with their neighbors.
-    ArrayList<ArrayList<Node>> massageMatrix(ArrayList<ArrayList<Node>>
-        matrix) {
-        
-        for (ArrayList<Node> arr : matrix) {
-            for (Node n : arr) {
-                // Y-Axis
-                if (n.y == 0) {
-                    n.top = n;
-                    n.bottom = matrix.get(n.y + 1).get(n.x);
-                }
-                else if (n.y == BOARD_HEIGHT - 1) {
-                    n.top = matrix.get(n.y - 1).get(n.x);
-                    n.bottom = n;
-                }
-                else {
-                    n.top = matrix.get(n.y - 1).get(n.x);
-                    n.bottom = matrix.get(n.y + 1).get(n.x);
-                }
-
-                // X-Axis
-                if (n.x == 0) {
-                    n.left = n;
-                    n.right = matrix.get(n.y).get(n.x + 1);
-                }
-                else if (n.x == BOARD_WIDTH - 1) {
-                    n.left = matrix.get(n.y).get(n.x - 1);
-                    n.right = n;
-                }
-                else {
-                    n.left = matrix.get(n.y).get(n.x - 1);
-                    n.right = matrix.get(n.y).get(n.x + 1);
-                }
-            }
-        }
-        
-        return matrix;
-    }
-    
     // Returns a list of the Edges as implied by the connections in the given matrix of Nodes.
     ArrayList<Edge> extractEdges(ArrayList<ArrayList<Node>>
         matrix) {
-
         Random rand = new Random();
         ArrayList<Edge> result = new ArrayList<Edge>();
         
@@ -148,45 +122,12 @@ class MazeGame {
                 if(n.x != BOARD_WIDTH - 1) {
                     // Right
                     result.add(new Edge(n, row.get(indexX + 1), rand.nextInt(100)));
+                    System.out.println(n.toString() + ",  " + row.get(indexX + 1).toString());
                 }
                 if(n.y != BOARD_HEIGHT - 1) {
                     // Bottom
                     result.add(new Edge(n, matrix.get(indexY + 1).get(indexX), rand.nextInt(100)));
-                }
-            }
-        }
-        
-        for (ArrayList<Node> arr : matrix) {
-            for (Node n : arr) {
-                
-                
-                
-                // Y-Axis
-                if (n.y == 0) {
-                    n.top = n;
-                    n.bottom = matrix.get(n.y + 1).get(n.x);
-                }
-                else if (n.y == BOARD_HEIGHT - 1) {
-                    n.top = matrix.get(n.y - 1).get(n.x);
-                    n.bottom = n;
-                }
-                else {
-                    n.top = matrix.get(n.y - 1).get(n.x);
-                    n.bottom = matrix.get(n.y + 1).get(n.x);
-                }
-
-                // X-Axis
-                if (n.x == 0) {
-                    n.left = n;
-                    n.right = matrix.get(n.y).get(n.x + 1);
-                }
-                else if (n.x == BOARD_WIDTH - 1) {
-                    n.left = matrix.get(n.y).get(n.x - 1);
-                    n.right = n;
-                }
-                else {
-                    n.left = matrix.get(n.y).get(n.x - 1);
-                    n.right = matrix.get(n.y).get(n.x + 1);
+                    System.out.println(n.toString() + ",  " + matrix.get(indexY + 1).get(indexX).toString());
                 }
             }
         }
@@ -206,8 +147,11 @@ class MazeGame {
         for(ArrayList<Node> arr : nodes) {
             for(Node n : arr) {
                 reps.put(n.toString(), n.toString());
+                System.out.println(n.toString());
             }
         }
+        
+        System.out.println("LENGTHMOFO " + reps.size());
         
         for (int index = 1 ; index < edges.size(); index = index + 1) { 
             if(!utils.find(reps, edges.get(index).a.toString()).equals(utils.find(reps, (edges.get(index).b.toString())))) {
@@ -220,9 +164,109 @@ class MazeGame {
         return edgesInTree;
     }
     
-//    ArrayList<Node> buildMazeByEdges(ArrayList<Edge> edges) {
-//        ArrayList<ArrayList<Node>> finalMatrix = this.buildMatrix();
-//    }
+    void linkNodes(ArrayList<Edge> edges) {
+        for(Edge edge : edges) {
+            // Above
+            if(edge.a.x == edge.b.x && edge.a.y < edge.b.y) {
+                edge.a.bottom = edge.b;
+                edge.b.top = edge.a;
+            }
+            // Below
+            else if(edge.a.x == edge.b.x && edge.a.y > edge.b.y) {
+                edge.b.bottom = edge.a;
+                edge.a.top = edge.b;
+            }
+            // Left
+            else if(edge.a.x < edge.b.x && edge.a.y == edge.b.y) {
+                edge.a.right = edge.b;
+                edge.b.left = edge.a;
+            }
+            // Right
+            else if (edge.a.x > edge.b.x && edge.a.y == edge.b.y) {
+                edge.b.right = edge.a;
+                edge.a.left = edge.b;
+            }
+        }
+    }
+    
+    // The background for the world.
+    WorldImage background;
+    
+    // Creates the image of the game.
+    public WorldImage makeImage() {
+        // Initialize the background.
+        this.background = new RectangleImage(new Posn(
+                (HALF_BOARD_WIDTH * NODE_SIZE),
+                (HALF_BOARD_HEIGHT * NODE_SIZE)), (BOARD_WIDTH * NODE_SIZE),
+                (BOARD_HEIGHT * NODE_SIZE), new Black());
+
+//        System.out.println(this.map.get(0).get(0).top.toString());
+//        System.out.println(this.map.get(0).get(0).bottom.toString());
+//        System.out.println(this.map.get(0).get(0).left.toString());
+//        System.out.println(this.map.get(0).get(0).right.toString());
+        
+        // Draw the Cells onto the background.
+        for (ArrayList<Node> arr : this.map) {
+            
+            for(Node n : arr) {
+//                this.background = new OverlayImages(this.background,
+//                        new RectangleImage(new Posn(n.x * NODE_SIZE + HALF_NODE_SIZE, n.y * NODE_SIZE + HALF_NODE_SIZE), NODE_SIZE, NODE_SIZE, new Blue()));
+//                
+//                // Top edge case
+//                if(n.y == 0) {
+//                    this.background = new OverlayImages(this.background,
+//                            new RectangleImage(new Posn((n.x * NODE_SIZE) + HALF_NODE_SIZE, n.y * NODE_SIZE),
+//                                    NODE_SIZE, 2, new Black()));
+//                }
+//                
+//                // Left edge case
+//                if(n.x == 0) {
+//                    this.background = new OverlayImages(this.background,
+//                            new RectangleImage(new Posn(n.x * NODE_SIZE, (n.y * NODE_SIZE) + HALF_NODE_SIZE),
+//                                    2, NODE_SIZE, new Black()));
+//                }
+//                
+//                if(n.bottom.toString().equals(n.toString())) {
+//                    this.background = new OverlayImages(this.background,
+//                            new RectangleImage(new Posn((n.x * NODE_SIZE) + HALF_NODE_SIZE, (n.y * NODE_SIZE) + NODE_SIZE),
+//                                    NODE_SIZE, 2, new Black()));
+//                }
+//                
+//                if(n.right.toString().equals(n.toString())) {
+//                    this.background = new OverlayImages(this.background,
+//                            new RectangleImage(new Posn(n.x * NODE_SIZE + NODE_SIZE, (n.y * NODE_SIZE) + HALF_NODE_SIZE),
+//                                    2, NODE_SIZE, new Black()));
+//                }
+//                
+                
+                int top = 0;
+                int bottom = 0;
+                int left = 0;
+                int right = 0;
+                
+                if(n.bottom != n) {
+                    bottom = 2;
+                }
+                if(n.top != n) {
+                    top = 2;
+                }
+                if(n.left != n) {
+                    left = 2;
+                }
+                if(n.right != n) {
+                    right = 2;
+                }
+                
+                
+                this.background = new OverlayImages(this.background,
+                        new RectangleImage(new Posn((n.x * NODE_SIZE) + right / 2 - left / 2, (n.y * NODE_SIZE) + bottom / 2 - top / 2),
+                                NODE_SIZE - 4 + left + right, NODE_SIZE - 4 + top + bottom, new White()));
+                
+            }
+        }
+        
+        return background;
+    }
 }
 
 class Utils {
@@ -310,7 +354,9 @@ class ExamplesMaze {
     }
     
     
-    
+    // RUN THE GAME
+    MazeGame w = new MazeGame();
+    boolean runAnimated = this.w.bigBang(1000, 600, 0.2);
     
     
 }
