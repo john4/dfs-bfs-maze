@@ -139,15 +139,54 @@ class MazeGame {
         Random rand = new Random();
         ArrayList<Edge> result = new ArrayList<Edge>();
         
-        for (ArrayList<Node> arr : matrix) {
-            for (Node n : arr) {
+        for (int indexY = 0; indexY < matrix.size(); indexY = indexY + 1) {
+            ArrayList<Node> row = matrix.get(indexY);
+            
+            for (int indexX = 0; indexX < row.size(); indexX = indexX + 1) {
+                Node n = row.get(indexX);
+                
                 if(n.x != BOARD_WIDTH - 1) {
                     // Right
-                    result.add(new Edge(n, n.right, rand.nextInt(100)));
+                    result.add(new Edge(n, row.get(indexX + 1), rand.nextInt(100)));
                 }
                 if(n.y != BOARD_HEIGHT - 1) {
                     // Bottom
-                    result.add(new Edge(n, n.bottom, rand.nextInt(100)));
+                    result.add(new Edge(n, matrix.get(indexY + 1).get(indexX), rand.nextInt(100)));
+                }
+            }
+        }
+        
+        for (ArrayList<Node> arr : matrix) {
+            for (Node n : arr) {
+                
+                
+                
+                // Y-Axis
+                if (n.y == 0) {
+                    n.top = n;
+                    n.bottom = matrix.get(n.y + 1).get(n.x);
+                }
+                else if (n.y == BOARD_HEIGHT - 1) {
+                    n.top = matrix.get(n.y - 1).get(n.x);
+                    n.bottom = n;
+                }
+                else {
+                    n.top = matrix.get(n.y - 1).get(n.x);
+                    n.bottom = matrix.get(n.y + 1).get(n.x);
+                }
+
+                // X-Axis
+                if (n.x == 0) {
+                    n.left = n;
+                    n.right = matrix.get(n.y).get(n.x + 1);
+                }
+                else if (n.x == BOARD_WIDTH - 1) {
+                    n.left = matrix.get(n.y).get(n.x - 1);
+                    n.right = n;
+                }
+                else {
+                    n.left = matrix.get(n.y).get(n.x - 1);
+                    n.right = matrix.get(n.y).get(n.x + 1);
                 }
             }
         }
@@ -155,6 +194,9 @@ class MazeGame {
         return result;
     }
     
+    // Takes a list of Nodes and list of Edges with weights for those nodes and 
+    // returns a list of Edges that are representative of what is actually to be
+    // used for this game's spanning tree.
     ArrayList<Edge> kruskal(ArrayList<Edge> edges, ArrayList<ArrayList<Node>> nodes) {
         HashMap<String, String> reps = new HashMap<String, String>();
         ArrayList<Edge> edgesInTree = new ArrayList<Edge>();
@@ -167,14 +209,8 @@ class MazeGame {
             }
         }
         
-        // 
-        
-        for (int index = 1 ; index < edges.size(); index = index + 1) {
-            
-            if(utils.find(reps, edges.get(index).a.toString()).equals(utils.find(reps, (edges.get(index).b.toString())))) {
-                
-            }
-            else {
+        for (int index = 1 ; index < edges.size(); index = index + 1) { 
+            if(!utils.find(reps, edges.get(index).a.toString()).equals(utils.find(reps, (edges.get(index).b.toString())))) {
                 edgesInTree.add(edges.get(index));
                 utils.union(reps, utils.find(reps, edges.get(index).a.toString()), 
                         utils.find(reps, edges.get(index).b.toString()));
@@ -183,6 +219,10 @@ class MazeGame {
         
         return edgesInTree;
     }
+    
+//    ArrayList<Node> buildMazeByEdges(ArrayList<Edge> edges) {
+//        ArrayList<ArrayList<Node>> finalMatrix = this.buildMatrix();
+//    }
 }
 
 class Utils {
