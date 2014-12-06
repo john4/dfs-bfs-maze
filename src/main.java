@@ -97,6 +97,8 @@ class MazeGame extends World {
 
     ArrayList<ArrayList<Node>> map;
     ArrayList<Edge> edges;
+    
+    Random rand = new Random();
 
     // Determines the mode of the game:
     // - DFS
@@ -118,7 +120,11 @@ class MazeGame extends World {
 
     HashMap<Node, Edge> traceBack;
 
-    MazeGame(String mode) {
+    MazeGame(String mode, int seed) {
+        if(seed >= 0) {
+            this.rand = new Random(seed);
+        }
+        
         if (mode.equals("DFS") || mode.equals("BFS") || mode.equals("human")) {
             this.gameMode = mode;
 
@@ -156,10 +162,15 @@ class MazeGame extends World {
                     "Constructed MazeGame with an invalid mode setting.");
         }
     }
+    
+    // Convenience constructor for a specific game mode without seeding.
+    MazeGame(String mode) {
+        this(mode, -1);
+    }
 
     // Convenience constructor for a human-controlled game.
     MazeGame() {
-        this("human");
+        this("human", - 1);
     }
 
     void initMaze() {
