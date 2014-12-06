@@ -435,9 +435,11 @@ class MazeGame extends World {
     // Move the human player to the given node.
     // SIDEEFFECT: Updates the seeker.
     void stepHuman(Node to) {
+    	if (this.seeker != to) {
         this.seeker.isVisited = false;
         to.isSeeker = true;
         this.seeker.isSeeker = false;
+    	}
         
         this.seeker = to;
     }
