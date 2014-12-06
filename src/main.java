@@ -170,7 +170,7 @@ class MazeGame extends World {
     // The list of weighted edges as extracted from the node matrix.
     ArrayList<Edge> edges;
 
-    Random rand = new Random(123);
+    Random rand = new Random();
 
     // Determines the mode of the game:
     // - DFS
@@ -712,54 +712,173 @@ class ExamplesMaze {
     }
 
     void testSearch(Tester t) {
-        // these tests step though the search and check the states of Nodes
-        setupDFS();
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+    	// Testing Depth First Search
+    	setupDFS();
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+    	
+    	// At this point the seeker has the choice of right or down, it chooses
+    	// Down right stays unvisited
+    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
 
-        // At this point the seeker has the choice of right or down, it chooses
-        // Down right stays unvisited
-        t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
-        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
-        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	// After 9 ticks the search has reached the end and reconstruct
+    	// sets the correct nodes to highlighted
+    	this.game.reconstruct(this.game.end);
+ 	
+    	t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
+    	
+    	// this node was visited but not in the shortest path so is not 
+    	// highlighted
+    	t.checkExpect(!this.game.map.get(2).get(2).isHighlighted &&
+    			this.game.map.get(2).get(2).isVisited, true);
+    	
+    	// Testing Breadth First Search
+    	setupBFS();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+    	
+    	// At this point the seeker has the choice of right or down, it 
+    	// chooses both right and down creating a second seeker
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(2).isSeeker, true);
+    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+    	
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	
+       	// After 15 ticks the search has reached the end and reconstruct
+    	// sets the correct nodes to highlighted
+    	this.game.reconstruct(this.game.end);
+    	
+    	t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
+    	
+    	// this node was visited but not in the shortest path so is not 
+    	// highlighted
+    	t.checkExpect(!this.game.map.get(2).get(2).isHighlighted &&
+    			this.game.map.get(2).get(2).isVisited, true);
+    	
+    }
+    
+    void testMove(Tester t) {
+    	
+    	// Test down, by showing the tile below our seeker changes to 
+    	// a seeker and shows the previous seeker is no longer a seeker
+    	setupHuman();
+    	boolean initialState = this.game.map.get(1).get(0).isSeeker;
+    	this.game.onKeyEvent("down");
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker != initialState &&
+    			this.game.map.get(1).get(0).isSeeker, true);
+    	t.checkExpect(this.game.map.get(0).get(0).isSeeker, false);
+    	
+    	// Test right, by showing the tile to the right of our seeker changes
+    	// to a seeker, and shows the previous seeker is no longer a seeker
+    	setupHuman();
+    	initialState = this.game.map.get(1).get(1).isSeeker;
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("right");
+    	t.checkExpect(this.game.map.get(1).get(1).isSeeker != initialState &&
+    			this.game.map.get(1).get(1).isSeeker, true);
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, false);
+    	
+    	// Test left, by showing the tile to the right of  our seeker changes
+    	// to a seeker and shows the previous seeker is no longer a seeker
+    	setupHuman();
+    	initialState = this.game.map.get(1).get(0).isSeeker;
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("right");
+    	this.game.onKeyEvent("left");
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker != initialState &&
+    			this.game.map.get(1).get(0).isSeeker, true);
+    	t.checkExpect(this.game.map.get(1).get(1).isSeeker, false);
+    	
+    	// Test up, by showing the tile to the right of  our seeker changes
+    	// to a seeker and shows the previous seeker is no longer a seeker
+    	setupHuman();
+    	initialState = this.game.map.get(1).get(1).isSeeker;
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("right");
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("up");
+    	t.checkExpect(this.game.map.get(1).get(1).isSeeker != initialState &&
+    			this.game.map.get(1).get(1).isSeeker, true);
+    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, false);
+    }
+    	
 
-        this.game.onTick();
-        this.game.onTick();
-        this.game.onTick();
-        this.game.onTick();
-        this.game.onTick();
+    void testCantMove(Tester t) {
 
-        this.game.reconstruct(this.game.end);
+    	// Test noUp by showing the up key doesnt move the seeker
+    	setupHuman();
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("up");
+    	boolean initialState = this.game.map.get(0).get(0).isSeeker;
+    	this.game.onKeyEvent("up");
+    	t.checkExpect(this.game.map.get(0).get(0).isSeeker == initialState &&
+    			this.game.map.get(0).get(0).isSeeker, true);
+    	
+    	// Test noDown by showing the down key doesn't move the seeker
+    	setupHuman();
+    	this.game.onKeyEvent("down");
+    	initialState = this.game.map.get(1).get(0).isSeeker;
+    	this.game.onKeyEvent("down");
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker == initialState &&
+    			this.game.map.get(1).get(0).isSeeker, true);
+    	
+    	// Test noLeft by showing the left key doesn't move the seeker
+    	setupHuman();
+    	this.game.onKeyEvent("down");
+    	initialState = this.game.map.get(1).get(0).isSeeker;
+    	this.game.onKeyEvent("left");
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker == initialState &&
+    			this.game.map.get(1).get(0).isSeeker, true);
+    	
+       	// Test noRight by showing the right key doesn't move the seeker
+    	setupHuman();
+    	this.game.onKeyEvent("down");
+    	this.game.onKeyEvent("up");
+    	initialState = this.game.map.get(0).get(0).isSeeker;
+    	this.game.onKeyEvent("right");
+    	t.checkExpect(this.game.map.get(0).get(0).isSeeker == initialState &&
+    			this.game.map.get(0).get(0).isSeeker, true);
 
-        t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
-        t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
-        t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
-
-        setupBFS();
-        t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
-
-        // At this point the seeker has the choice of right or down, it chooses
-        // both right and down creating a second seeker
-        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
-        t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
-        this.game.onTick();
-        t.checkExpect(this.game.map.get(1).get(2).isSeeker, true);
-        t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
-
+    	
     }
 
     // RUN THE GAME
-    // MazeGame w = new MazeGame("human");
-    // boolean runAnimated = this.w.bigBang(1000, 600, 1);
+    MazeGame w = new MazeGame("human");
+    boolean runAnimated = this.w.bigBang(1000, 600, 1);
 
 }
