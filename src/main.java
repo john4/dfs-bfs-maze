@@ -329,8 +329,8 @@ class MazeGame extends World {
                     utils.find(reps, (edges.get(index).b.toString())))) {
                 edgesInTree.add(edges.get(index));
                 utils.union(reps,
-                        utils.find(reps, edges.get(index).a.toString()),
-                        utils.find(reps, edges.get(index).b.toString()));
+                        edges.get(index).a.toString(),
+                        edges.get(index).b.toString());
             }
         }
 
@@ -573,6 +573,7 @@ class MazeGame extends World {
             for (Node n : this.worklist) {
                 if (n == this.end) {
                     this.reconstruct(this.end);
+                    
                     state = new WorldEnd(true, new OverlayImages(
                             this.makeImage(), new TextImage(new Posn(
                                     BOARD_WIDTH, BOARD_HEIGHT), "GAME OVER",
@@ -584,6 +585,7 @@ class MazeGame extends World {
         else if (this.gameMode.equals("DFS")) {
             if (this.seekerDFS == this.end) {
                 this.reconstruct(this.end);
+                
                 state = new WorldEnd(true, new OverlayImages(
                         this.makeImage(), new TextImage(new Posn(BOARD_WIDTH,
                                 BOARD_HEIGHT), "GAME OVER", Color.red)));
@@ -618,6 +620,8 @@ class Utils {
         return indexOfMin;
     }
 
+    // Sorts the given list of Edges by weight, smallest to largest.
+    // SIFEEFFECT: Changes the arrangement of the given arr
     void sort(ArrayList<Edge> arr) {
         for (int index = 0; index < arr.size(); index = index + 1) {
             int indexOfMin = this.findMin(arr, index);
@@ -625,6 +629,7 @@ class Utils {
         }
     }
 
+    // Find and return the given key's last representative in the given hashMap.
     String find(HashMap<String, String> hashMap, String key) {
         String k = hashMap.get(key);
 
@@ -636,9 +641,9 @@ class Utils {
         }
     }
 
+    // Sets rep1's final representative in the given hashMap to rep2's.
     void union(HashMap<String, String> hashMap, String rep1, String rep2) {
-        hashMap.put(rep1, rep2);
-
+        hashMap.put(this.find(hashMap, rep1), this.find(hashMap, rep2));
     }
 }
 
