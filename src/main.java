@@ -95,7 +95,9 @@ class MazeGame extends World {
     static final int NODE_SIZE = 30; // in px
     static final int HALF_NODE_SIZE = NODE_SIZE / 2; // in px
 
+    // The matrix of this maze's nodes.
     ArrayList<ArrayList<Node>> map;
+    // The list of weighted edges as extracted from the node matrix.
     ArrayList<Edge> edges;
     
     Random rand = new Random();
@@ -118,8 +120,13 @@ class MazeGame extends World {
     // The Node that is actively searching in a depth first search.
     Node seekerDFS;
 
+    // Hashmap to keep track of where the seeker has been in order to display
+    // the shortest path.
     HashMap<Node, Edge> traceBack;
 
+    // Main constructor. Pass a negative seed for true random.
+    // SIDEEFFECT: Initializes all the components of this game based on 
+    // passed mode argument.
     MazeGame(String mode, int seed) {
         if(seed >= 0) {
             this.rand = new Random(seed);
@@ -132,16 +139,6 @@ class MazeGame extends World {
             this.initMaze();
             this.linkNodes(this.kruskal(this.edges, this.map));
 
-            for (ArrayList<Node> arr : this.map) {
-                for (Node n : arr) {
-                    System.out.println("THIS: " + n.toString() + "    Top: "
-                            + n.top.toString() + " bottom: "
-                            + n.bottom.toString() + " left: "
-                            + n.left.toString() + " right: "
-                            + n.right.toString());
-                }
-            }
-
             // Initialize game play necessities.
             this.start = this.map.get(0).get(0);
             this.end = this.map.get(BOARD_HEIGHT - 1).get(BOARD_WIDTH - 1);
@@ -151,10 +148,10 @@ class MazeGame extends World {
 
             // Set initial states based on selected game mode
             if (mode.equals("DFS")) {
-                this.InitDFS(this.start);
+                this.initDFS(this.start);
             }
             else if (mode.equals("BFS")) {
-                this.InitBFS(this.start);
+                this.initBFS(this.start);
             }
         }
         else {
@@ -173,6 +170,8 @@ class MazeGame extends World {
         this("human", - 1);
     }
 
+    // Initializes this maze, which is a matrix of Nodes.
+    // SIDEEFFECT: Updates this edges and this map to their populated states.
     void initMaze() {
         Utils utils = new Utils();
 
@@ -184,6 +183,7 @@ class MazeGame extends World {
         this.map = tempMatrix;
     }
 
+    // Creates a matrix of nodes based on the sizes of this game.
     ArrayList<ArrayList<Node>> buildMatrix() {
         ArrayList<ArrayList<Node>> result = new ArrayList<ArrayList<Node>>();
 
@@ -265,6 +265,10 @@ class MazeGame extends World {
         return edgesInTree;
     }
 
+    // Walks over a list of Edges and links their corresponding nodes to
+    // eachother appropriately.
+    // SIDEEFFECT: Updates the top, bottom, left, and right fields of
+    // the Nodes in the given list of Edges.
     void linkNodes(ArrayList<Edge> edges) {
         for (Edge edge : edges) {
             // Above
@@ -290,12 +294,14 @@ class MazeGame extends World {
         }
     }
 
-    // ///////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+    /////  FROM HERE DOWN RESIDES GAMEPLAY FUNCTIONS 
+    /////////////////////////////////////////////////////////////////////////
 
     // Initiates an automated depth first search of this maze, starting
     // at the given Node.
-    // SIDEEFFECT: Sets this worklist and this seekerDFS.
-    void InitDFS(Node start) {
+    // SIDEEFFECT: Sets this worklist, used as a Stack, and this seekerDFS.
+    void initDFS(Node start) {
         ArrayDeque<Node> worklist = new ArrayDeque<Node>();
         worklist.push(start);
 
@@ -307,7 +313,7 @@ class MazeGame extends World {
     // called by this onTick().
     // SIDEEFFECT: Updates this worklist, this seekerDFS, and the
     // states of seeking nodes.
-    void StepDFS() {
+    void stepDFS() {
         // Pop the next node to become the seeker.
         Node nextSeeker = this.worklist.pop();
 
@@ -329,8 +335,8 @@ class MazeGame extends World {
 
     // Initiates an automated breadth first search of this maze, starting
     // at the given Node.
-    // SIDEEFFECT: Sets this worklist
-    void InitBFS(Node start) {
+    // SIDEEFFECT: Sets this worklist, used as a Queque
+    void initBFS(Node start) {
         this.worklist.addFirst(start);
     }
 
@@ -338,7 +344,7 @@ class MazeGame extends World {
     // called by this onTick().
     // SIDEEFFECT: Updates this worklist and the states of seeking
     // Nodes
-    void StepBFS() {
+    void stepBFS() {
         Node lastSeeker = this.worklist.pop();
 
         lastSeeker.state = "visited";
@@ -351,12 +357,26 @@ class MazeGame extends World {
             }
         }
     }
+    
+    // Move the human player to the given node.
+    // SIDEEFFECT: Updates the seeker.
+    void stepHuman(Node to) {
+        this.seeker.state = "unvisted";
+        to.state = "seeker";
+        
+        this.seeker = to;
+    }
 
+    // Adds the given to and from Nodes to this traceBack HashMap, mapping
+    // each given to Node to an Edge consisting of them both.
+    // SIDEEFFECT: Updates this traceBack
     void trace(Node to, Node from) {
-
         this.traceBack.put(to, new Edge(to, from));
     }
 
+    // Walks through this traceBack, starting at the even end Node, updating
+    // the states of the Nodes to be highlighted paths.
+    // SIDEEFFECT: Updates the state fields of the Nodes in this 
     void reconstruct(Node end) {
         Edge e = this.traceBack.get(end);
 
@@ -369,25 +389,16 @@ class MazeGame extends World {
         }
     }
 
-    // Operates the world on each tick.
+    // Operates the world on each tick, based on the mode.
     public World onTick() {
         if (this.gameMode.equals("DFS")) {
-            this.StepDFS();
+            this.stepDFS();
         }
         else if (this.gameMode.equals("BFS")) {
-            this.StepBFS();
-        }
-        else {
-
+            this.stepBFS();
         }
 
         return this;
-    }
-
-    void movePlayer(Node to) {
-        this.seeker.state = "unvisted";
-        to.state = "seeker";
-        this.seeker = to;
     }
 
     // Handle key events.
@@ -405,16 +416,16 @@ class MazeGame extends World {
 
         if (this.gameMode.equals("human")) {
             if (ke.equals("up")) {
-                this.movePlayer(this.seeker.top);
+                this.stepHuman(this.seeker.top);
             }
             else if (ke.equals("down")) {
-                this.movePlayer(this.seeker.bottom);
+                this.stepHuman(this.seeker.bottom);
             }
             else if (ke.equals("left")) {
-                this.movePlayer(this.seeker.left);
+                this.stepHuman(this.seeker.left);
             }
             else if (ke.equals("right")) {
-                this.movePlayer(this.seeker.right);
+                this.stepHuman(this.seeker.right);
             }
         }
 
@@ -440,13 +451,13 @@ class MazeGame extends World {
                 Color c;
 
                 if (n.state.equals("visited")) {
-                    c = new Color(255, 178, 201);
+                    c = new Color(255, 178, 102);
                 }
                 else if (n.state.equals("seeker")) {
                     c = new Color(153, 76, 0);
                 }
                 else if (n.state.equals("highlight")) {
-                    c = new Color(0, 0, 255);
+                    c = new Color(255, 128, 0);
                 }
                 else if (n.state.equals("start")) {
                     c = new Color(0, 204, 0);
@@ -498,7 +509,6 @@ class MazeGame extends World {
 
         if (this.gameMode.equals("human")) {
             if (this.seeker == this.end) {
-                this.reconstruct(this.start);
                 state = new WorldEnd(true, new OverlayImages(
                         this.makeImage(), new TextImage(new Posn(
                                 BOARD_WIDTH / 2, BOARD_HEIGHT / 2),
@@ -532,6 +542,7 @@ class MazeGame extends World {
     }
 }
 
+// Represent a big red toolbox of utilities!
 class Utils {
     // Effect swap the values at 2 indices in given array
     <T> void swap(ArrayList<T> arr, int idx1, int idx2) {
