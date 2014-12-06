@@ -156,11 +156,11 @@ class Edge {
 
 class MazeGame extends World {
     // Constants
-    static final int BOARD_WIDTH = 100; // in Nodes
-    static final int BOARD_HEIGHT = 60; // in Nodes
+    static final int BOARD_WIDTH = 4; // in Nodes
+    static final int BOARD_HEIGHT = 4; // in Nodes
     static final int HALF_BOARD_WIDTH = BOARD_WIDTH / 2; // in Nodes
     static final int HALF_BOARD_HEIGHT = BOARD_HEIGHT / 2; // in Nodes
-    static final int NODE_SIZE = 10; // in px
+    static final int NODE_SIZE = 30; // in px
     static final int HALF_NODE_SIZE = NODE_SIZE / 2; // in px
 
     // The matrix of this maze's nodes.
@@ -168,7 +168,7 @@ class MazeGame extends World {
     // The list of weighted edges as extracted from the node matrix.
     ArrayList<Edge> edges;
 
-    Random rand = new Random();
+    Random rand = new Random(123);
 
     // Determines the mode of the game:
     // - DFS
@@ -643,92 +643,107 @@ class Utils {
 class ExamplesMaze {
     MazeGame game;
 
-//    
-//    void setupHuman() {
-//    	this.game = new MazeGame("human", 123);
-//    }
-//    
-//    void setupDFS() {
-//    	this.game = new MazeGame("DFS", 123);
-//    }
-//    
-//    void setupBFS() {
-//    	this.game = new MazeGame("BFS", 123);
-//    }
-//
-//    void setup() {
-//        this.game = new MazeGame();
-//    }
-//    
-//
-//    void testConstructor(Tester t) {
-//        this.setup();
-//        t.checkExpect(this.game.edges.size(), 24);
-//    }
-//
-//    void testKuskal(Tester t) {
-//        this.setup();
-//        t.checkExpect(this.game.kruskal(this.game.edges, this.game.map)
-//                .size(), 15);
-//    }
-//
-//    void testUtils(Tester t) {
-//        ArrayList<Edge> test = new ArrayList<Edge>(Arrays.asList(new Edge(
-//                new Node(1, 1), new Node(1, 1), 10), new Edge(new Node(1, 1),
-//                new Node(1, 1), 9), new Edge(new Node(1, 1), new Node(1, 1),
-//                5), new Edge(new Node(1, 1), new Node(1, 1), 15)));
-//        Utils utils = new Utils();
-//        utils.sort(test);
-//
-//        HashMap<String, String> hash = new HashMap();
-//        hash.put("A", "A");
-//        hash.put("B", "B");
-//        hash.put("C", "C");
-//        hash.put("D", "E");
-//        hash.put("E", "A");
-//
-//        t.checkExpect(utils.find(hash, "D"), "A");
-//        t.checkExpect(utils.find(hash, "E"), "A");
-//        t.checkExpect(utils.find(hash, "A"), "A");
-//    }
-//    
-//    void testSearch(Tester t) {
-//    	// these tests step though the search and check the states of Nodes
-//    	setupDFS();
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "unvisited");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "seeker");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "visited");
-//    	
-//    	// At this point the seeker has the choice of right or down, it chooses
-//    	// Down right stays unvisited
-//    	t.checkExpect(this.game.map.get(2).get(1).state, "unvisited");
-//    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(2).get(1).state, "seeker");
-//    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
-//    	
-//    	setupBFS();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "unvisited");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "seeker");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(0).state, "visited");
-//    	
-//    	// At this point the seeker has the choice of right or down, it chooses
-//    	//  both right and down creating a second seeker
-//    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
-//    	t.checkExpect(this.game.map.get(2).get(1).state, "unvisited");
-//    	this.game.onTick();
-//    	t.checkExpect(this.game.map.get(1).get(2).state, "seeker");
-//    	t.checkExpect(this.game.map.get(2).get(1).state, "seeker");
-//    	
-//    }
+    
+    void setupHuman() {
+    	this.game = new MazeGame("human", 123);
+    }
+    
+    void setupDFS() {
+    	this.game = new MazeGame("DFS", 123);
+    }
+    
+    void setupBFS() {
+    	this.game = new MazeGame("BFS", 123);
+    }
+
+    void setup() {
+        this.game = new MazeGame();
+    }
+    
+
+    void testConstructor(Tester t) {
+        this.setup();
+        t.checkExpect(this.game.edges.size(), 24);
+    }
+
+    void testKuskal(Tester t) {
+        this.setup();
+        t.checkExpect(this.game.kruskal(this.game.edges, this.game.map)
+                .size(), 15);
+    }
+
+    void testUtils(Tester t) {
+        ArrayList<Edge> test = new ArrayList<Edge>(Arrays.asList(new Edge(
+                new Node(1, 1), new Node(1, 1), 10), new Edge(new Node(1, 1),
+                new Node(1, 1), 9), new Edge(new Node(1, 1), new Node(1, 1),
+                5), new Edge(new Node(1, 1), new Node(1, 1), 15)));
+        Utils utils = new Utils();
+        utils.sort(test);
+
+        HashMap<String, String> hash = new HashMap();
+        hash.put("A", "A");
+        hash.put("B", "B");
+        hash.put("C", "C");
+        hash.put("D", "E");
+        hash.put("E", "A");
+
+        t.checkExpect(utils.find(hash, "D"), "A");
+        t.checkExpect(utils.find(hash, "E"), "A");
+        t.checkExpect(utils.find(hash, "A"), "A");
+    }
+    
+    void testSearch(Tester t) {
+    	// these tests step though the search and check the states of Nodes
+    	setupDFS();
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+    	
+    	// At this point the seeker has the choice of right or down, it chooses
+    	// Down right stays unvisited
+    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+    	this.game.onTick();
+
+
+    	this.game.reconstruct(this.game.end);
+
+
+    	
+    	t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
+    	t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
+    	
+    	setupBFS();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+    	
+    	// At this point the seeker has the choice of right or down, it chooses
+    	//  both right and down creating a second seeker
+    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(2).isSeeker, true);
+    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+    	
+    }
 
     // RUN THE GAME
     MazeGame w = new MazeGame("human");
-    boolean runAnimated = this.w.bigBang(1000, 600, 0.001);
+    boolean runAnimated = this.w.bigBang(1000, 600, 1);
 
 }
