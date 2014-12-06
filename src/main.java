@@ -206,7 +206,6 @@ class MazeGame extends World {
     // Returns a list of the Edges as implied by the connections in the given
     // matrix of Nodes.
     ArrayList<Edge> extractEdges(ArrayList<ArrayList<Node>> matrix) {
-        Random rand = new Random();
         ArrayList<Edge> result = new ArrayList<Edge>();
 
         for (int indexY = 0; indexY < matrix.size(); indexY = indexY + 1) {
@@ -217,7 +216,7 @@ class MazeGame extends World {
 
                 if (n.x != BOARD_WIDTH - 1) {
                     // Right
-                    result.add(new Edge(n, row.get(indexX + 1), rand
+                    result.add(new Edge(n, row.get(indexX + 1), this.rand
                             .nextInt(100)));
                     System.out.println(n.toString() + ",  "
                             + row.get(indexX + 1).toString());
@@ -225,7 +224,7 @@ class MazeGame extends World {
                 if (n.y != BOARD_HEIGHT - 1) {
                     // Bottom
                     result.add(new Edge(n,
-                            matrix.get(indexY + 1).get(indexX), rand
+                            matrix.get(indexY + 1).get(indexX), this.rand
                                     .nextInt(100)));
                     System.out.println(n.toString() + ",  "
                             + matrix.get(indexY + 1).get(indexX).toString());
