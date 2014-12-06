@@ -28,7 +28,7 @@ class Node {
     Node top;
     Node right;
     Node bottom;
-    // State determines color
+    // State determines color and behavior
     boolean isStart;
     boolean isEnd;
     boolean isVisited;
@@ -50,6 +50,7 @@ class Node {
         this.isHighlighted = false;
     }
 
+    // Return a String representation of this Node.
     public String toString() {
         return "(" + Integer.toString(this.x) + ", "
                 + Integer.toString(this.y) + ")";
@@ -77,21 +78,21 @@ class Node {
 
         return result;
     }
-    
+
+    // Return this Node drawn accorind to its state and position.
     WorldImage draw() {
-    	
-    	 // Determine color.
+
+        // Determine color.
         Color c;
-        
 
         if (this.isHighlighted) {
             c = new Color(255, 128, 0);
         }
-        
+
         else if (this.isStart) {
             c = new Color(0, 204, 0);
         }
-        
+
         else if (this.isEnd) {
             c = new Color(200, 0, 0);
         }
@@ -99,11 +100,11 @@ class Node {
         else if (this.isSeeker) {
             c = new Color(153, 76, 0);
         }
-        
+
         else if (this.isVisited) {
             c = new Color(255, 178, 102);
         }
-   
+
         else {
             c = new Color(255, 255, 255);
         }
@@ -127,17 +128,16 @@ class Node {
             right = 2;
         }
 
-        return new RectangleImage(new Posn((this.x * MazeGame.NODE_SIZE) + right
-                        / 2 - left / 2 + MazeGame.HALF_NODE_SIZE,
-                        (this.y * MazeGame.NODE_SIZE) + bottom / 2 - top / 2
-                                + MazeGame.HALF_NODE_SIZE), MazeGame.NODE_SIZE - 4
-                        + left + right, MazeGame.NODE_SIZE - 4 + top + bottom,
-                        c);
-
+        return new RectangleImage(new Posn((this.x * MazeGame.NODE_SIZE)
+                + right / 2 - left / 2 + MazeGame.HALF_NODE_SIZE,
+                (this.y * MazeGame.NODE_SIZE) + bottom / 2 - top / 2
+                        + MazeGame.HALF_NODE_SIZE), MazeGame.NODE_SIZE - 4
+                + left + right, MazeGame.NODE_SIZE - 4 + top + bottom, c);
 
     }
 }
 
+// To represent a weighted, undirected edge between two nodes.
 class Edge {
     int weight;
     Node a;
@@ -149,11 +149,13 @@ class Edge {
         this.b = b;
     }
 
+    // Convenience constructor for Edges where weight is negligible.
     Edge(Node a, Node b) {
         this(a, b, -1);
     }
 }
 
+// To represent a Maze Game.
 class MazeGame extends World {
     // Constants
     static final int BOARD_WIDTH = 4; // in Nodes
@@ -218,8 +220,6 @@ class MazeGame extends World {
             this.start = this.map.get(0).get(0);
             this.end = this.map.get(BOARD_HEIGHT - 1).get(BOARD_WIDTH - 1);
             this.seeker = start;
-//            this.seeker.isSeeker = true;
-//            this.start.isSeeker = true;
             this.worklist = new ArrayDeque<Node>();
             this.traceBack = new HashMap<Node, Edge>();
 
@@ -328,8 +328,7 @@ class MazeGame extends World {
             if (!utils.find(reps, edges.get(index).a.toString()).equals(
                     utils.find(reps, (edges.get(index).b.toString())))) {
                 edgesInTree.add(edges.get(index));
-                utils.union(reps,
-                        edges.get(index).a.toString(),
+                utils.union(reps, edges.get(index).a.toString(),
                         edges.get(index).b.toString());
             }
         }
@@ -435,12 +434,12 @@ class MazeGame extends World {
     // Move the human player to the given node.
     // SIDEEFFECT: Updates the seeker.
     void stepHuman(Node to) {
-    	if (this.seeker != to) {
-        this.seeker.isVisited = false;
-        to.isSeeker = true;
-        this.seeker.isSeeker = false;
-    	}
-        
+        if (this.seeker != to) {
+            this.seeker.isVisited = false;
+            to.isSeeker = true;
+            this.seeker.isSeeker = false;
+        }
+
         this.seeker = to;
     }
 
@@ -468,9 +467,9 @@ class MazeGame extends World {
         if (next != this.start) {
             this.reconstruct(next);
         }
-        
+
         else {
-        	this.end.isHighlighted = true;
+            this.end.isHighlighted = true;
         }
     }
 
@@ -537,8 +536,7 @@ class MazeGame extends World {
 
             for (Node n : arr) {
                 // Overlay.
-                this.background = new OverlayImages(this.background,
-                        n.draw());
+                this.background = new OverlayImages(this.background, n.draw());
             }
         }
 
@@ -550,8 +548,7 @@ class MazeGame extends World {
                             HALF_BOARD_HEIGHT * NODE_SIZE),
                             "INCORRECT MOVES MADE : "
                                     + Integer.toString(this.totalMoves
-                                            - this.correctMoves),
-                                            Color.green));
+                                            - this.correctMoves), Color.green));
         }
 
         return background;
@@ -573,7 +570,7 @@ class MazeGame extends World {
             for (Node n : this.worklist) {
                 if (n == this.end) {
                     this.reconstruct(this.end);
-                    
+
                     state = new WorldEnd(true, new OverlayImages(
                             this.makeImage(), new TextImage(new Posn(
                                     BOARD_WIDTH, BOARD_HEIGHT), "GAME OVER",
@@ -585,7 +582,7 @@ class MazeGame extends World {
         else if (this.gameMode.equals("DFS")) {
             if (this.seekerDFS == this.end) {
                 this.reconstruct(this.end);
-                
+
                 state = new WorldEnd(true, new OverlayImages(
                         this.makeImage(), new TextImage(new Posn(BOARD_WIDTH,
                                 BOARD_HEIGHT), "GAME OVER", Color.red)));
@@ -650,29 +647,36 @@ class Utils {
 class ExamplesMaze {
     MazeGame game;
 
-    
     void setupHuman() {
-    	this.game = new MazeGame("human", 123);
+        this.game = new MazeGame("human", 123);
     }
-    
+
     void setupDFS() {
-    	this.game = new MazeGame("DFS", 123);
+        this.game = new MazeGame("DFS", 123);
     }
-    
+
     void setupBFS() {
-    	this.game = new MazeGame("BFS", 123);
+        this.game = new MazeGame("BFS", 123);
     }
 
     void setup() {
         this.game = new MazeGame();
     }
-    
 
     void testConstructor(Tester t) {
         this.setup();
         t.checkExpect(this.game.edges.size(), 24);
     }
-
+    
+    void testBuildMatrix(Tester t) {
+        this.setup();
+        ArrayList<ArrayList<Node>> s = this.game.buildMatrix();
+        
+        t.checkExpect(this.game.map.get(0).get(0) == s.get(0).get(0), false);
+        t.checkExpect(this.game.map.size() == s.size(), true);
+        t.checkExpect(this.game.map.get(0).size() == s.get(0).size(), true);
+    }
+    
     void testKuskal(Tester t) {
         this.setup();
         t.checkExpect(this.game.kruskal(this.game.edges, this.game.map)
@@ -697,60 +701,65 @@ class ExamplesMaze {
         t.checkExpect(utils.find(hash, "D"), "A");
         t.checkExpect(utils.find(hash, "E"), "A");
         t.checkExpect(utils.find(hash, "A"), "A");
+
+        utils.union(hash, "A", "C");
+        t.checkExpect(hash.get("A"), "C");
+        utils.union(hash, "B", "E");
+        t.checkExpect(hash.get("B"), "C");
+        t.checkExpect(hash.get("C"), "C");
+        utils.union(hash, "E", "C");
+        t.checkExpect(hash.get("C"), "C");
     }
-    
+
     void testSearch(Tester t) {
-    	// these tests step though the search and check the states of Nodes
-    	setupDFS();
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
-    	
-    	// At this point the seeker has the choice of right or down, it chooses
-    	// Down right stays unvisited
-    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
-    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
-    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
-    	
-    	this.game.onTick();
-    	this.game.onTick();
-    	this.game.onTick();
-    	this.game.onTick();
-    	this.game.onTick();
+        // these tests step though the search and check the states of Nodes
+        setupDFS();
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
 
+        // At this point the seeker has the choice of right or down, it chooses
+        // Down right stays unvisited
+        t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
 
-    	this.game.reconstruct(this.game.end);
+        this.game.onTick();
+        this.game.onTick();
+        this.game.onTick();
+        this.game.onTick();
+        this.game.onTick();
 
+        this.game.reconstruct(this.game.end);
 
-    	
-    	t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
-    	t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
-    	t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
-    	
-    	setupBFS();
-    	t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
-    	
-    	// At this point the seeker has the choice of right or down, it chooses
-    	//  both right and down creating a second seeker
-    	t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
-    	t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
-    	this.game.onTick();
-    	t.checkExpect(this.game.map.get(1).get(2).isSeeker, true);
-    	t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
-    	
+        t.checkExpect(this.game.map.get(3).get(3).isHighlighted, true);
+        t.checkExpect(this.game.map.get(3).get(2).isHighlighted, true);
+        t.checkExpect(this.game.map.get(0).get(0).isHighlighted, true);
+
+        setupBFS();
+        t.checkExpect(this.game.map.get(1).get(0).isVisited, false);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(0).isSeeker, true);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(0).isVisited, true);
+
+        // At this point the seeker has the choice of right or down, it chooses
+        // both right and down creating a second seeker
+        t.checkExpect(this.game.map.get(1).get(2).isVisited, false);
+        t.checkExpect(this.game.map.get(2).get(1).isVisited, false);
+        this.game.onTick();
+        t.checkExpect(this.game.map.get(1).get(2).isSeeker, true);
+        t.checkExpect(this.game.map.get(2).get(1).isSeeker, true);
+
     }
 
     // RUN THE GAME
-    MazeGame w = new MazeGame("human");
-    boolean runAnimated = this.w.bigBang(1000, 600, 1);
+    // MazeGame w = new MazeGame("human");
+    // boolean runAnimated = this.w.bigBang(1000, 600, 1);
 
 }
