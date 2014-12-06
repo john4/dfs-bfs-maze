@@ -88,8 +88,8 @@ class Edge {
 
 class MazeGame extends World {
     // Constants
-    static final int BOARD_WIDTH = 10; // in Nodes
-    static final int BOARD_HEIGHT = 10; // in Nodes
+    static final int BOARD_WIDTH = 4; // in Nodes
+    static final int BOARD_HEIGHT = 4; // in Nodes
     static final int HALF_BOARD_WIDTH = BOARD_WIDTH / 2; // in Nodes
     static final int HALF_BOARD_HEIGHT = BOARD_HEIGHT / 2; // in Nodes
     static final int NODE_SIZE = 30; // in px
@@ -100,7 +100,7 @@ class MazeGame extends World {
     // The list of weighted edges as extracted from the node matrix.
     ArrayList<Edge> edges;
     
-    Random rand = new Random();
+    Random rand = new Random(123);
 
     // Determines the mode of the game:
     // - DFS
@@ -592,20 +592,33 @@ class Utils {
 
 class ExamplesMaze {
     MazeGame game;
+    
+    void setupHuman() {
+    	this.game = new MazeGame("human", 123);
+    }
+    
+    void setupDFS() {
+    	this.game = new MazeGame("DFS", 123);
+    }
+    
+    void setupBFS() {
+    	this.game = new MazeGame("BFS", 123);
+    }
 
     void setup() {
         this.game = new MazeGame();
     }
+    
 
     void testConstructor(Tester t) {
         this.setup();
-        t.checkExpect(this.game.edges.size(), 11840);
+        t.checkExpect(this.game.edges.size(), 24);
     }
 
     void testKuskal(Tester t) {
         this.setup();
         t.checkExpect(this.game.kruskal(this.game.edges, this.game.map)
-                .size(), 5999);
+                .size(), 15);
     }
 
     void testUtils(Tester t) {
@@ -627,9 +640,44 @@ class ExamplesMaze {
         t.checkExpect(utils.find(hash, "E"), "A");
         t.checkExpect(utils.find(hash, "A"), "A");
     }
+    
+    void testSearch(Tester t) {
+    	// these tests step though the search and check the states of Nodes
+    	setupDFS();
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "unvisited");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "seeker");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "visited");
+    	
+    	// At this point the seeker has the choice of right or down, it chooses
+    	// Down right stays unvisited
+    	t.checkExpect(this.game.map.get(2).get(1).state, "unvisited");
+    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(2).get(1).state, "seeker");
+    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
+    	
+    	setupBFS();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "unvisited");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "seeker");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(0).state, "visited");
+    	
+    	// At this point the seeker has the choice of right or down, it chooses
+    	//  both right and down creating a second seeker
+    	t.checkExpect(this.game.map.get(1).get(2).state, "unvisited");
+    	t.checkExpect(this.game.map.get(2).get(1).state, "unvisited");
+    	this.game.onTick();
+    	t.checkExpect(this.game.map.get(1).get(2).state, "seeker");
+    	t.checkExpect(this.game.map.get(2).get(1).state, "seeker");
+    	
+    }
 
     // RUN THE GAME
     MazeGame w = new MazeGame("human");
-    boolean runAnimated = this.w.bigBang(1000, 600, 0.0001);
+    boolean runAnimated = this.w.bigBang(1000, 600, 1);
 
 }
